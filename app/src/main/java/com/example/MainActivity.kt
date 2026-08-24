@@ -1,25 +1,24 @@
 package com.example
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
-import com.example.ui.screens.LuminaWebViewScreen
-import com.example.ui.theme.LuminaTheme
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var webView: WebView
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
 
     private val fileChooserLauncher = registerForActivityResult(
@@ -32,36 +31,70 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
-        setContent {
-            LuminaTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-                    LuminaWebViewScreen(
-                        assetUrl = "file:///android_asset/index.html",
-                        onFilePickerRequested = { callback, params ->
-                            filePathCallback = callback
-                            try {
-                                val intent = params?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
-                                    type = "*/*"
-                                    addCategory(Intent.CATEGORY_OPENABLE)
-                                }
-                                fileChooserLauncher.launch(intent)
-                                true
-                            } catch (e: ActivityNotFoundException) {
-                                filePathCallback = null
-                                Toast.makeText(this, "No file manager found", Toast.LENGTH_SHORT).show()
-                                false
-                            }
-                        },
-                        modifier = Modifier.padding(innerPadding)
-                    )
+        webView = WebView(this).apply {
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+                allowFileAccess = true
+                allowContentAccess = true
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                setSupportZoom(false)
+                cacheMode = WebSettings.LOAD_DEFAULT
+                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            }
+
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    // Load all links inside the WebView
+                    return false
                 }
             }
+
+            webChromeClient = object : WebChromeClient() {
+                override fun onShowFileChooser(
+                    webView: WebView?,
+                    filePathCallback: ValueCallback<Array<Uri>>?,
+                    fileChooserParams: FileChooserParams?
+                ): Boolean {
+                    this@MainActivity.filePathCallback = filePathCallback
+                    try {
+                        val intent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                            type = "*/*"
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                        }
+                        fileChooserLauncher.launch(intent)
+                        return true
+                    } catch (e: ActivityNotFoundException) {
+                        this@MainActivity.filePathCallback = null
+                        Toast.makeText(this@MainActivity, "File selector unavailable", Toast.LENGTH_SHORT).show()
+                        return false
+                    }
+                }
+            }
+
+            loadUrl("file:///android_asset/index.html")
         }
+
+        setContentView(webView)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (::webView.isInitialized && webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
     }
 }
