@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LUMINA 9D AI SUITE - MASTER APP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Orbitron', sans-serif; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #010308;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .holo-bg {
+            position: fixed;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(0, 242, 254, 0.15) 0%, transparent 60%),
+                linear-gradient(rgba(0, 242, 254, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.08) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            transform: rotateX(60deg);
+            animation: gridMove 12s linear infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(30px); }
+        }
+
+        .app-view {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px;
+            gap: 6px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            background: rgba(1, 3, 8, 0.95);
+        }
+
+        .app-view.active { display: flex; }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 8px;
+            justify-content: space-between;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 6px;
+            border-bottom: 2px solid rgba(0, 242, 254, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 8px; }
+
+        .app-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            border: 1px solid #00f2fe;
+            box-shadow: 0 0 10px #00f2fe, 0 0 18px #7b1fa2;
+            animation: logoGlow 2s infinite alternate;
+            object-fit: cover;
+        }
+
+        @keyframes logoGlow {
+            0% { box-shadow: 0 0 6px #00f2fe, 0 0 12px #7b1fa2; transform: scale(1); }
+            100% { box-shadow: 0 0 14px #00f2fe, 0 0 24px #c05cff; transform: scale(1.03); }
+        }
+
+        .title { font-size: 13px; font-weight: 900; color: #00f2fe; letter-spacing: 1.5px; text-shadow: 0 0 8px #00f2fe; }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 7px;
+            font-weight: 700;
+            color: #00f2fe;
+        }
+
+        .status-dot { width: 4px; height: 4px; border-radius: 50%; }
+        .status-dot.online { background-color: #00ffaa; box-shadow: 0 0 5px #00ffaa; }
+        .status-dot.offline { background-color: #ff3333; box-shadow: 0 0 5px #ff3333; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .hud-label { font-size: 8px; color: #8b949e; letter-spacing: 1.5px; margin-bottom: 6px; }
+
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* UPGRADED CARD BORDERS WITH NEON GLOW */
+        .holo-card {
+            background: linear-gradient(135deg, rgba(10, 25, 50, 0.85) 0%, rgba(2, 8, 20, 0.95) 100%);
+            border: 1.5px solid rgba(0, 242, 254, 0.8);
+            border-radius: 8px;
+            padding: 10px;
+            height: 92px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.4), inset 0 0 8px rgba(0, 242, 254, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .holo-card:active { 
+            transform: scale(0.96); 
+            box-shadow: 0 0 18px rgba(0, 242, 254, 0.7);
+        }
+
+        .holo-card.chat-card { 
+            background: linear-gradient(135deg, rgba(123, 31, 162, 0.4) 0%, rgba(10, 25, 50, 0.95) 100%); 
+            border: 1.5px solid rgba(192, 92, 255, 0.9);
+            box-shadow: 0 0 12px rgba(192, 92, 255, 0.5), inset 0 0 8px rgba(192, 92, 255, 0.25);
+        }
+
+        .holo-card.prompt-card { 
+            background: linear-gradient(135deg, rgba(0, 255, 170, 0.3) 0%, rgba(10, 25, 50, 0.95) 100%); 
+            border: 1.5px solid rgba(0, 255, 170, 0.8);
+            box-shadow: 0 0 12px rgba(0, 255, 170, 0.4), inset 0 0 8px rgba(0, 255, 170, 0.2);
+        }
+
+        .card-top { display: flex; align-items: center; justify-content: space-between; }
+        .card-icon { font-size: 18px; color: #00f2fe; filter: drop-shadow(0 0 6px #00f2fe); }
+        .chat-card .card-icon { color: #c05cff; filter: drop-shadow(0 0 6px #c05cff); }
+        .prompt-card .card-icon { color: #00ffaa; filter: drop-shadow(0 0 6px #00ffaa); }
+
+        .live-badge { font-size: 5.5px; background: rgba(0, 255, 170, 0.2); border: 1px solid #00ffaa; color: #00ffaa; padding: 1px 4px; border-radius: 3px; }
+        .card-title { font-size: 9.5px; font-weight: 900; color: #ffffff; margin-bottom: 1px; }
+        .card-desc { font-size: 6.5px; color: #00f2fe; opacity: 0.8; font-family: sans-serif; }
+
+        .bottom-section { display: flex; flex-direction: column; gap: 5px; margin-top: auto; }
+        .ad-slot-container { width: 100%; background: rgba(0, 242, 254, 0.03); border: 1px dashed rgba(0, 242, 254, 0.4); border-radius: 6px; padding: 3px; text-align: center; }
+        .ad-label-tag { font-size: 5.5px; color: #8b949e; letter-spacing: 0.5px; margin-bottom: 1px; text-transform: uppercase; }
+        .ad-banner-box { width: 100%; height: 26px; background: rgba(10, 15, 30, 0.8); border: 1px solid rgba(192, 92, 255, 0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #c05cff; font-size: 6.5px; letter-spacing: 1px; }
+
+        .bottom-action-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(10, 25, 50, 0.85) 0%, rgba(2, 8, 20, 0.95) 100%);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            border-radius: 8px;
+            padding: 4px 3px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+        }
+
+        .nav-btn {
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 5px;
+            padding: 4px 2px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; }
+        .nav-btn i { font-size: 10px; color: #00f2fe; margin-bottom: 2px; filter: drop-shadow(0 0 4px #00f2fe); }
+        .nav-btn span { font-size: 5px; font-weight: 700; color: #ffffff; letter-spacing: 0.2px; text-transform: uppercase; text-align: center; }
+
+        .sub-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; border-bottom: 2px solid rgba(0, 242, 254, 0.4); background: rgba(1, 3, 8, 0.9); }
+        .back-btn { background: rgba(0, 242, 254, 0.1); border: 1px solid #00f2fe; color: #00f2fe; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 7.5px; display: flex; align-items: center; gap: 4px; }
+        .page-title { font-size: 9.5px; font-weight: 900; color: #00f2fe; letter-spacing: 1px; text-shadow: 0 0 8px #00f2fe; }
+
+        .sub-content-box {
+            flex: 1;
+            background: rgba(10, 25, 50, 0.4);
+            border: 1px dashed rgba(0, 242, 254, 0.4);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            text-align: center;
+            gap: 6px;
+            overflow: hidden;
+        }
+
+        .gemini-chat-bar {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(0, 242, 254, 0.5);
+            border-radius: 20px;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.2), inset 0 0 8px rgba(0, 242, 254, 0.1);
+            margin-top: auto;
+        }
+
+        .gemini-btn {
+            background: transparent;
+            border: none;
+            color: #00f2fe;
+            font-size: 11px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .gemini-btn:active { transform: scale(0.88); background: rgba(0, 242, 254, 0.2); }
+
+        .gemini-btn.recording {
+            color: #ff3333;
+            animation: micPulse 1s infinite alternate;
+        }
+
+        @keyframes micPulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px #ff3333); }
+            100% { transform: scale(1.15); filter: drop-shadow(0 0 8px #ff3333); }
+        }
+
+        .gemini-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 8px;
+            font-family: sans-serif;
+            padding: 4px;
+        }
+
+        .gemini-input::placeholder { color: rgba(0, 242, 254, 0.5); }
+
+        .chat-history-box {
+            width: 100%;
+            flex: 1;
+            background: rgba(1, 5, 12, 0.8);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 6px;
+            padding: 6px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+
+        .chat-msg {
+            font-size: 7.5px;
+            padding: 5px 8px;
+            border-radius: 8px;
+            max-width: 85%;
+            font-family: sans-serif;
+            line-height: 1.3;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .chat-msg.user { background: rgba(0, 242, 254, 0.2); border: 1px solid #00f2fe; align-self: flex-end; color: #fff; }
+        .chat-msg.bot { background: rgba(192, 92, 255, 0.2); border: 1px solid #c05cff; align-self: flex-start; color: #00f2fe; }
+
+        .sensor-view-box { width: 100%; flex: 1; background: radial-gradient(circle at center, #0a1930 0%, #030814 100%); border: 1px dashed rgba(0, 242, 254, 0.6); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .overlay-ui { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .view-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        .view-content.active { display: flex; }
+
+        .ar-tape-wrapper { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .ar-camera-grid { position: absolute; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 242, 254, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 254, 0.05) 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; }
+        .ar-crosshair { position: absolute; width: 30px; height: 30px; border: 1px dashed rgba(0, 242, 254, 0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .ar-crosshair::after { content: ''; width: 4px; height: 4px; background: #00f2fe; border-radius: 50%; }
+        .ar-measurement-path { position: absolute; width: 65%; height: 4px; background: linear-gradient(90deg, #00f2fe, #c05cff, #00f2fe); display: flex; align-items: center; justify-content: space-between; }
+        .ar-pin { width: 12px; height: 18px; background: #00f2fe; border-radius: 50%; }
+        .ar-distance-badge { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: rgba(1, 8, 20, 0.9); border: 1px solid #00f2fe; color: #00f2fe; font-size: 7px; padding: 2px 6px; border-radius: 4px; }
+
+        .controls-panel { background: rgba(10, 25, 50, 0.9); border: 1px solid rgba(0, 242, 254, 0.4); border-radius: 6px; padding: 3px; width: 100%; }
+        .tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+        .tool-btn { background: rgba(1, 3, 8, 0.8); border: 1px solid rgba(0, 242, 254, 0.4); color: #00f2fe; padding: 4px 1px; border-radius: 4px; font-size: 5.5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .tool-btn.active { background: rgba(0, 242, 254, 0.25); border-color: #00f2fe; }
+
+        .file-preview-tag {
+            font-size: 6px;
+            color: #00ffaa;
+            background: rgba(0, 255, 170, 0.1);
+            border: 1px solid #00ffaa;
+            padding: 1px 4px;
+            border-radius: 3px;
+            display: none;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="holo-bg"></div>
+
+    <!-- 1. DASHBOARD VIEW -->
+    <div id="view-dashboard" class="app-view active">
+        <div class="container" style="position:relative; width:100%; height:100%; padding:0;">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="logo.png" onerror="this.onerror=null; this.src='app_logo.png';" alt="Lumina Logo" class="app-logo">
+                    <div class="title">LUMINA AI</div>
+                </div>
+                <div class="status-badge">
+                    <span id="net-dot" class="status-dot online"></span>
+                    <span id="net-text">JB_V2.5®(online)</span>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="hud-label">[ SYSTEM MODULES ]</div>
+                <div class="grid-container">
+                    <div class="holo-card" onclick="openModule('video')">
+                        <div class="card-top"><i class="fa-solid fa-clapperboard card-icon"></i></div>
+                        <div><div class="card-title">VIDEO GEN</div><div class="card-desc">9D FX & Neural Synth</div></div>
+                    </div>
+                    <div class="holo-card" onclick="openModule('image')">
+                        <div class="card-top"><i class="fa-solid fa-palette card-icon"></i></div>
+                        <div><div class="card-title">IMAGE GEN</div><div class="card-desc">Holo Studio & Prompts</div></div>
+                    </div>
+                    <div class="holo-card" onclick="openModule('fabrication')">
+                        <div class="card-top"><i class="fa-solid fa-compass-drafting card-icon"></i></div>
+                        <div><div class="card-title">FABRICATION</div><div class="card-desc">360° Level & AR Tape</div></div>
+                    </div>
+                    <div class="holo-card chat-card" onclick="openModule('chat')">
+                        <div class="card-top"><i class="fa-solid fa-comments card-icon"></i></div>
+                        <div><div class="card-title">AI CHAT</div><div class="card-desc">Gemini Neural Interface</div></div>
+                    </div>
+                    <div class="holo-card prompt-card" onclick="openModule('prompt')">
+                        <div class="card-top"><i class="fa-solid fa-wand-magic-sparkles card-icon"></i><span class="live-badge">AUTO</span></div>
+                        <div><div class="card-title">PROMPT STUDIO</div><div class="card-desc">Live Cloud & Web Prompts</div></div>
+                    </div>
+                    <div class="holo-card" onclick="openModule('settings')">
+                        <div class="card-top"><i class="fa-solid fa-gear card-icon"></i></div>
+                        <div><div class="card-title">SETTINGS</div><div class="card-desc">Preferences & Config</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-section">
+                <div class="ad-slot-container">
+                    <div class="ad-label-tag">--- SYSTEM MONETIZATION ---</div>
+                    <div class="ad-banner-box">[ AD BANNER PLACEHOLDER ]</div>
+                </div>
+                <div class="bottom-action-bar">
+                    <div class="nav-btn" onclick="openModule('video')"><i class="fa-solid fa-clapperboard"></i><span>VIDEO</span></div>
+                    <div class="nav-btn" onclick="openModule('image')"><i class="fa-solid fa-palette"></i><span>IMAGE</span></div>
+                    <div class="nav-btn" onclick="openModule('fabrication')"><i class="fa-solid fa-compass-drafting"></i><span>FABRIC</span></div>
+                    <div class="nav-btn" onclick="openModule('chat')"><i class="fa-solid fa-comments"></i><span>AI CHAT</span></div>
+                    <div class="nav-btn" onclick="openModule('prompt')"><i class="fa-solid fa-wand-magic-sparkles"></i><span>PROMPT</span></div>
+                    <div class="nav-btn" onclick="openModule('settings')"><i class="fa-solid fa-gear"></i><span>SETTINGS</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. VIDEO GEN VIEW -->
+    <div id="view-video" class="app-view">
+        <div class="sub-header">
+            <div class="back-btn" onclick="openModule('dashboard')"><i class="fa-solid fa-arrow-left"></i> BACK</div>
+            <div class="page-title">VIDEO GENERATION STUDIO</div>
+        </div>
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ TOP AD BANNER ]</div></div>
+        
+        <div class="sub-content-box">
+            <div class="chat-history-box" id="chat-history-video">
+                <div class="chat-msg bot">Lumina Video AI: Enter video prompt, upload reference media or record voice prompt below!</div>
+            </div>
+            <div class="gemini-chat-bar">
+                <button class="gemini-btn" onclick="triggerFileUpload('file-video')"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="file" id="file-video" style="display:none;" onchange="handleFileSelect(this, 'preview-video')">
+                <span id="preview-video" class="file-preview-tag"></span>
+                <input type="text" id="input-video" class="gemini-input" placeholder="Describe video or voice command..." onkeydown="if(event.key==='Enter') sendGeminiMsg('video')">
+                <button class="gemini-btn" id="mic-video" onclick="toggleVoiceRecord('video')"><i class="fa-solid fa-microphone"></i></button>
+                <button class="gemini-btn" onclick="sendGeminiMsg('video')"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ BOTTOM AD BANNER ]</div></div>
+    </div>
+
+    <!-- 3. IMAGE GEN VIEW -->
+    <div id="view-image" class="app-view">
+        <div class="sub-header">
+            <div class="back-btn" onclick="openModule('dashboard')"><i class="fa-solid fa-arrow-left"></i> BACK</div>
+            <div class="page-title">IMAGE GENERATION STUDIO</div>
+        </div>
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ TOP AD BANNER ]</div></div>
+        
+        <div class="sub-content-box">
+            <div class="chat-history-box" id="chat-history-image">
+                <div class="chat-msg bot">Lumina Image AI: Send text prompt, audio command or upload image to modify!</div>
+            </div>
+            <div class="gemini-chat-bar">
+                <button class="gemini-btn" onclick="triggerFileUpload('file-image')"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="file" id="file-image" style="display:none;" onchange="handleFileSelect(this, 'preview-image')">
+                <span id="preview-image" class="file-preview-tag"></span>
+                <input type="text" id="input-image" class="gemini-input" placeholder="Describe image or voice command..." onkeydown="if(event.key==='Enter') sendGeminiMsg('image')">
+                <button class="gemini-btn" id="mic-image" onclick="toggleVoiceRecord('image')"><i class="fa-solid fa-microphone"></i></button>
+                <button class="gemini-btn" onclick="sendGeminiMsg('image')"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ BOTTOM AD BANNER ]</div></div>
+    </div>
+
+    <!-- 4. FABRICATION & AR MODULE VIEW -->
+    <div id="view-fabrication" class="app-view">
+        <div class="sub-header">
+            <div class="back-btn" onclick="openModule('dashboard')"><i class="fa-solid fa-arrow-left"></i> BACK</div>
+            <div class="page-title" id="main-header-title">FABRICATION & MEASURE</div>
+        </div>
+
+        <div class="sensor-view-box">
+            <div class="overlay-ui">
+                <div id="subview-artape" class="view-content active">
+                    <div class="ar-tape-wrapper">
+                        <div class="ar-camera-grid"></div>
+                        <div class="ar-crosshair"></div>
+                        <div class="ar-measurement-path">
+                            <div class="ar-pin"></div>
+                            <div class="ar-distance-badge" id="tape-distance-text">1185 mm (3.88 ft)</div>
+                            <div class="ar-pin"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="tools-grid">
+                <button class="tool-btn active" id="btn-artape" onclick="switchTool('artape')"><i class="fa-solid fa-ruler-horizontal"></i> AR TAPE</button>
+                <button class="tool-btn" id="btn-aicounter" onclick="switchTool('aicounter')"><i class="fa-solid fa-boxes-stacked"></i> COUNTER</button>
+                <button class="tool-btn" id="btn-level" onclick="switchTool('level')"><i class="fa-solid fa-compass-drafting"></i> 360° LEVEL</button>
+                <button class="tool-btn" id="btn-rightangle" onclick="switchTool('rightangle')"><i class="fa-solid fa-draw-polygon"></i> 90° ANGLE</button>
+            </div>
+        </div>
+
+        <div class="gemini-chat-bar">
+            <button class="gemini-btn" onclick="triggerFileUpload('file-fabrication')"><i class="fa-solid fa-paperclip"></i></button>
+            <input type="file" id="file-fabrication" style="display:none;" onchange="handleFileSelect(this, 'preview-fabrication')">
+            <span id="preview-fabrication" class="file-preview-tag"></span>
+            <input type="text" id="input-fabrication" class="gemini-input" placeholder="Fabrication AI assistant / Voice command..." onkeydown="if(event.key==='Enter') sendGeminiMsg('fabrication')">
+            <button class="gemini-btn" id="mic-fabrication" onclick="toggleVoiceRecord('fabrication')"><i class="fa-solid fa-microphone"></i></button>
+            <button class="gemini-btn" onclick="sendGeminiMsg('fabrication')"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+
+        <div class="ad-slot-container" style="padding:2px;"><div class="ad-banner-box" style="height:18px; font-size:6px;">[ AD BANNER ]</div></div>
+    </div>
+
+    <!-- 5. MAIN AI CHAT ROOM VIEW -->
+    <div id="view-chat" class="app-view">
+        <div class="sub-header">
+            <div class="back-btn" onclick="openModule('dashboard')"><i class="fa-solid fa-arrow-left"></i> BACK</div>
+            <div class="page-title">GEMINI AI CHAT ROOM</div>
+        </div>
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ TOP AD BANNER ]</div></div>
+        
+        <div class="sub-content-box">
+            <div class="chat-history-box" id="chat-history-chat">
+                <div class="chat-msg bot">Lumina Gemini Engine: Hello! Send text, voice notes or media files directly to AI.</div>
+            </div>
+            <div class="gemini-chat-bar">
+                <button class="gemini-btn" onclick="triggerFileUpload('file-chat')"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="file" id="file-chat" style="display:none;" onchange="handleFileSelect(this, 'preview-chat')">
+                <span id="preview-chat" class="file-preview-tag"></span>
+                <input type="text" id="input-chat" class="gemini-input" placeholder="Ask Gemini AI or record audio..." onkeydown="if(event.key==='Enter') sendGeminiMsg('chat')">
+                <button class="gemini-btn" id="mic-chat" onclick="toggleVoiceRecord('chat')"><i class="fa-solid fa-microphone"></i></button>
+                <button class="gemini-btn" onclick="sendGeminiMsg('chat')"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ BOTTOM AD BANNER ]</div></div>
+    </div>
+
+    <!-- 6. PROMPT STUDIO VIEW -->
+    <div id="view-prompt" class="app-view">
+        <div class="sub-header">
+            <div class="back-btn" onclick="openModule('dashboard')"><i class="fa-solid fa-arrow-left"></i> BACK</div>
+            <div class="page-title">PROMPT STUDIO</div>
+        </div>
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ TOP AD BANNER ]</div></div>
+        
+        <div class="sub-content-box">
+            <div class="chat-history-box" id="chat-history-prompt">
+                <div class="chat-msg bot">Prompt Studio AI: Enter prompt ideas or audio command to generate prompt templates.</div>
+            </div>
+            <div class="gemini-chat-bar">
+                <button class="gemini-btn" onclick="triggerFileUpload('file-prompt')"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="file" id="file-prompt" style="display:none;" onchange="handleFileSelect(this, 'preview-prompt')">
+                <span id="preview-prompt" class="file-preview-tag"></span>
+                <input type="text" id="input-prompt" class="gemini-input" placeholder="Enter prompt idea or audio command..." onkeydown="if(event.key==='Enter') sendGeminiMsg('prompt')">
+                <button class="gemini-btn" id="mic-prompt" onclick="toggleVoiceRecord('prompt')"><i class="fa-solid fa-microphone"></i></button>
+                <button class="gemini-btn" onclick="sendGeminiMsg('prompt')"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ BOTTOM AD BANNER ]</div></div>
+    </div>
+
+    <!-- 7. SETTINGS VIEW -->
+    <div id="view-settings" class="app-view">
+        <div class="sub-header">
+            <div class="back-btn" onclick="openModule('dashboard')"><i class="fa-solid fa-arrow-left"></i> BACK</div>
+            <div class="page-title">APP SETTINGS</div>
+        </div>
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ TOP AD BANNER ]</div></div>
+        <div class="sub-content-box" style="justify-content:center;">
+            <h2>PREFERENCES & CONFIG</h2>
+            <p style="font-size:8px; color:#8b949e; margin:10px 0;">Local Storage Memory Used: <span id="storage-used-text" style="color:#00f2fe;">Calculating...</span></p>
+            <button class="back-btn" style="border-color:#ff3333; color:#ff3333;" onclick="clearLocalStorageData()"><i class="fa-solid fa-trash"></i> CLEAR LOCAL DATA</button>
+        </div>
+        <div class="ad-slot-container"><div class="ad-label-tag">--- ADVERTISEMENT ---</div><div class="ad-banner-box">[ BOTTOM AD BANNER ]</div></div>
+    </div>
+
+    <!-- JavaScript Controllers -->
+    <script>
+        function updateNetworkStatus() {
+            const dot = document.getElementById('net-dot');
+            const text = document.getElementById('net-text');
+            if (navigator.onLine) {
+                dot.className = "status-dot online";
+                text.innerText = "JB_V2.5®(online)";
+            } else {
+                dot.className = "status-dot offline";
+                text.innerText = "JB_V2.5®(offline)";
+            }
+        }
+
+        window.addEventListener('load', () => { 
+            updateNetworkStatus(); 
+            calcStorage(); 
+            setupLongPressHandlers(); 
+        });
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+
+        function openModule(moduleName) {
+            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+            const targetView = document.getElementById('view-' + moduleName);
+            if(targetView) targetView.classList.add('active');
+        }
+
+        function switchTool(mode) {
+            document.querySelectorAll('.controls-panel .tool-btn').forEach(btn => btn.classList.remove('active'));
+            if(document.getElementById('btn-' + mode)) document.getElementById('btn-' + mode).classList.add('active');
+        }
+
+        function triggerFileUpload(fileInputId) {
+            document.getElementById(fileInputId).click();
+        }
+
+        function handleFileSelect(inputElem, previewId) {
+            const preview = document.getElementById(previewId);
+            if(inputElem.files && inputElem.files[0]) {
+                preview.innerText = "📎 " + inputElem.files[0].name.substring(0, 10) + "...";
+                preview.style.display = "inline-block";
+            }
+        }
+
+        let isRecording = {};
+        function toggleVoiceRecord(module) {
+            const micBtn = document.getElementById('mic-' + module);
+            const inputField = document.getElementById('input-' + module);
+
+            if(!isRecording[module]) {
+                isRecording[module] = true;
+                micBtn.classList.add('recording');
+                inputField.placeholder = "Listening / Recording voice note...";
+            } else {
+                isRecording[module] = false;
+                micBtn.classList.remove('recording');
+                inputField.placeholder = "Type message or voice command...";
+                inputField.value = "[🎤 Voice Command Attached]";
+            }
+        }
+
+        function sendGeminiMsg(module) {
+            const input = document.getElementById('input-' + module);
+            const val = input.value.trim();
+            const preview = document.getElementById('preview-' + module);
+            const fileInput = document.getElementById('file-' + module);
+            const historyBox = document.getElementById('chat-history-' + module);
+
+            if(!val && (!fileInput || !fileInput.files.length)) return;
+
+            let fileAttachedText = (fileInput && fileInput.files.length) ? " 📁 [" + fileInput.files[0].name + "]" : "";
+            let fullMsg = (val || "Media file sent") + fileAttachedText;
+
+            if(historyBox) {
+                const userMsg = document.createElement('div');
+                userMsg.className = 'chat-msg user';
+                userMsg.innerText = fullMsg;
+                attachLongPress(userMsg);
+                historyBox.appendChild(userMsg);
+
+                setTimeout(() => {
+                    const botMsg = document.createElement('div');
+                    botMsg.className = 'chat-msg bot';
+                    botMsg.innerText = "Lumina Gemini AI: Processed request for '" + val + "'";
+                    attachLongPress(botMsg);
+                    historyBox.appendChild(botMsg);
+                    historyBox.scrollTop = historyBox.scrollHeight;
+                }, 400);
+
+                historyBox.scrollTop = historyBox.scrollHeight;
+            }
+
+            input.value = '';
+            if(fileInput) fileInput.value = '';
+            if(preview) { preview.innerText = ''; preview.style.display = 'none'; }
+        }
+
+        let pressTimer;
+        function attachLongPress(element) {
+            element.addEventListener('touchstart', startPress);
+            element.addEventListener('touchend', cancelPress);
+            element.addEventListener('mousedown', startPress);
+            element.addEventListener('mouseup', cancelPress);
+
+            function startPress(e) {
+                pressTimer = window.setTimeout(() => {
+                    showActionModal(element.innerText);
+                }, 750);
+            }
+
+            function cancelPress() {
+                clearTimeout(pressTimer);
+            }
+        }
+
+        function setupLongPressHandlers() {
+            document.querySelectorAll('.chat-msg').forEach(msg => attachLongPress(msg));
+        }
+
+        function showActionModal(content) {
+            let choice = confirm("OPTIONS FOR SELECTED CONTENT:\n\nPress OK to SHARE\nPress CANCEL to DOWNLOAD");
+            if(choice) {
+                if (navigator.share) {
+                    navigator.share({ title: 'Lumina 9D Output', text: content });
+                } else {
+                    alert("Copied to clipboard for sharing:\n\n" + content);
+                }
+            } else {
+                let blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+                let a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = "Lumina_Output.txt";
+                a.click();
+            }
+        }
+
+        function calcStorage() {
+            let total = 0;
+            for (let x in localStorage) {
+                if (localStorage.hasOwnProperty(x)) total += ((localStorage[x].length + x.length) * 2);
+            }
+            const elem = document.getElementById('storage-used-text');
+            if(elem) elem.innerText = (total / 1024).toFixed(2) + " KB (Device Internal Memory)";
+        }
+
+        function clearLocalStorageData() {
+            if(confirm("Clear all local data from your phone?")) {
+                localStorage.clear();
+                alert("Device memory cleared!");
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
