@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     view: WebView?,
                     request: WebResourceRequest?
                 ): Boolean {
-                    // Load all links inside the WebView
+                    // Retain navigation within the WebView instance
                     return false
                 }
             }
