@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -399,31 +400,28 @@ fun ArTapeSubView(
             .fillMaxSize()
             .testTag("ar_tape_view")
     ) {
-        val w = maxWidth
-        val h = maxHeight
-
         // Camera Grid & Crosshair Canvas
         Canvas(modifier = Modifier.fillMaxSize()) {
             val step = 30.dp.toPx()
-            var x = 0f
-            while (x < size.width) {
+            var xPos = 0f
+            while (xPos < size.width) {
                 drawLine(
                     color = CyanPrimary.copy(alpha = 0.08f),
-                    start = Offset(x, 0f),
-                    end = Offset(x, size.height),
+                    start = Offset(xPos, 0f),
+                    end = Offset(xPos, size.height),
                     strokeWidth = 1f
                 )
-                x += step
+                xPos += step
             }
-            var y = 0f
-            while (y < size.height) {
+            var yPos = 0f
+            while (yPos < size.height) {
                 drawLine(
                     color = CyanPrimary.copy(alpha = 0.08f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
+                    start = Offset(0f, yPos),
+                    end = Offset(size.width, yPos),
                     strokeWidth = 1f
                 )
-                y += step
+                yPos += step
             }
 
             // Center Crosshair
@@ -591,9 +589,9 @@ fun AiCounterSubView(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTapGestures { offset ->
-                    val xPercent = offset.x / size.width
-                    val yPercent = offset.y / size.height
+                detectTapGestures { tapOffset ->
+                    val xPercent = tapOffset.x / size.width
+                    val yPercent = tapOffset.y / size.height
                     onAddBox(xPercent, yPercent)
                 }
             }
@@ -605,25 +603,25 @@ fun AiCounterSubView(
         // Camera Grid Canvas
         Canvas(modifier = Modifier.fillMaxSize()) {
             val step = 30.dp.toPx()
-            var x = 0f
-            while (x < size.width) {
+            var xPos = 0f
+            while (xPos < size.width) {
                 drawLine(
                     color = PurplePrimary.copy(alpha = 0.08f),
-                    start = Offset(x, 0f),
-                    end = Offset(x, size.height),
+                    start = Offset(xPos, 0f),
+                    end = Offset(xPos, size.height),
                     strokeWidth = 1f
                 )
-                x += step
+                xPos += step
             }
-            var y = 0f
-            while (y < size.height) {
+            var yPos = 0f
+            while (yPos < size.height) {
                 drawLine(
                     color = PurplePrimary.copy(alpha = 0.08f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
+                    start = Offset(0f, yPos),
+                    end = Offset(size.width, yPos),
                     strokeWidth = 1f
                 )
-                y += step
+                yPos += step
             }
         }
 
@@ -729,10 +727,6 @@ fun SpiritLevelSubView(
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showSliders by remember { mutableStateOf(false) }
-    var simPitch by remember { mutableStateOf(0f) }
-    var simRoll by remember { mutableStateOf(0f) }
-
     val statusText = if (orientationData.isLevel) "PERFECTLY BALANCED" else "ADJUST ALIGNMENT"
     val statusColor = if (orientationData.isLevel) EmeraldAccent else WarningGold
 
@@ -946,7 +940,7 @@ fun VerticalTubeLevel(
             drawRoundRect(
                 color = Color(0xFF020713),
                 size = Size(size.width, size.height),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
             )
 
             // Calibration tick marks
@@ -964,7 +958,7 @@ fun VerticalTubeLevel(
                 ),
                 topLeft = Offset(cx - 6.dp.toPx(), by - 12.dp.toPx()),
                 size = Size(12.dp.toPx(), 24.dp.toPx()),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx(), 6.dp.toPx())
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
             )
         }
     }
@@ -995,7 +989,7 @@ fun HorizontalTubeLevel(
             drawRoundRect(
                 color = Color(0xFF020713),
                 size = Size(size.width, size.height),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx(), 6.dp.toPx())
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
             )
 
             // Calibration tick marks
@@ -1013,7 +1007,7 @@ fun HorizontalTubeLevel(
                 ),
                 topLeft = Offset(bx - 12.dp.toPx(), cy - 5.dp.toPx()),
                 size = Size(24.dp.toPx(), 10.dp.toPx()),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx())
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
             )
         }
     }
