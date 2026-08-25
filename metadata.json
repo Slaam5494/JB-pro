@@ -1,6 +1,6 @@
 {
   "name": "Lumina AI",
-  "description": "LUMINA 9D AI Suite - 9D Video & Image AI Studio, AR Fabrication & 360° Sensor Level, Neural Chat, and Prompt Studio.",
+  "description": "Smart AI Studio WebView Application",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
